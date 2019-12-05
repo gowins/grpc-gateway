@@ -75,6 +75,9 @@ type Registry struct {
 	// useGoTemplate determines whether you want to use GO templates
 	// in your protofile comments
 	useGoTemplate bool
+
+	// useMicroTranslator create the translator for go-micro service
+	useMicroTranslator bool
 }
 
 type repeatedFieldSeparator struct {
@@ -458,6 +461,16 @@ func (r *Registry) SetUseGoTemplate(use bool) {
 // GetUseGoTemplate returns useGoTemplate
 func (r *Registry) GetUseGoTemplate() bool {
 	return r.useGoTemplate
+}
+
+// SetUseMicroTranslator sets useMicroTranslator
+func (r *Registry) SetUseMicroTranslator(use bool) {
+	r.useMicroTranslator = use
+}
+
+// GetUseMicroTranslator returns useMicroTranslator
+func (r *Registry) GetUseMicroTranslator() bool {
+	return r.useMicroTranslator
 }
 
 // sanitizePackageName replaces unallowed character in package name

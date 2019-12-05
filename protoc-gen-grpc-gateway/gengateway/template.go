@@ -148,6 +148,12 @@ type trailerParams struct {
 	AssumeColonVerb    bool
 }
 
+type transMicroParams struct {
+	Services           []*descriptor.Service
+	UseRequestContext  bool
+	RegisterFuncSuffix string
+}
+
 func applyTemplate(p param, reg *descriptor.Registry) (string, error) {
 	w := bytes.NewBuffer(nil)
 	if err := headerTemplate.Execute(w, p); err != nil {
@@ -199,6 +205,20 @@ func applyTemplate(p param, reg *descriptor.Registry) (string, error) {
 	if reg != nil {
 		assumeColonVerb = !reg.GetAllowColonFinalSegments()
 	}
+
+	// add micro translator
+	if reg != nil && reg.GetUseMicroTranslator() {
+		rmp := transMicroParams{
+			Services:           targetServices,
+			UseRequestContext:  p.UseRequestContext,
+			RegisterFuncSuffix: p.RegisterFuncSuffix,
+		}
+
+		if err := transMicroTemplate.Execute(w, rmp); err != nil {
+			return "", err
+		}
+	}
+
 	tp := trailerParams{
 		Services:           targetServices,
 		UseRequestContext:  p.UseRequestContext,
@@ -711,5 +731,30 @@ var (
 	{{end}}
 	{{end}}
 )
+{{end}}`))
+
+	transMicroTemplate = template.Must(template.New("rewriteMicro").Parse(`
+{{range $svc := .Services}}
+type handle{{$svc.GetName}} struct {
+	{{$svc.GetName}}Handler {{$svc.GetName}}Handler
+}
+
+{{range $m := $svc.Methods}}
+func (h *handle{{$svc.GetName}}){{$m.GetName}}(ctx context.Context, in *{{$m.RequestType.GoType $m.Service.File.GoPkg.Path}}) (*{{$m.ResponseType.GoType $m.Service.File.GoPkg.Path}}, error) {
+    out := new({{$m.ResponseType.GoType $m.Service.File.GoPkg.Path}})
+	err := h.{{$svc.GetName}}Handler.{{$m.GetName}}(ctx, in, out)
+	return out, err
+}
+{{end}}
+
+// Register{{$svc.GetName}}{{$.RegisterFuncSuffix}}ServerForMicro registers the http handlers for service {{$svc.GetName}} to "mux".
+// The handlers forward requests to the local go-micro endpoint over "handler".
+// The "handler" is a real handler that implement from go-micro interface.
+func Register{{$svc.GetName}}{{$.RegisterFuncSuffix}}ServerForMicro(ctx context.Context, mux *runtime.ServeMux, handler {{$svc.GetName}}Handler) error {
+	transHandler := &handle{{$svc.GetName}} {
+		{{$svc.GetName}}Handler: handler,
+	}
+	return Register{{$svc.GetName}}{{$.RegisterFuncSuffix}}Server(ctx, mux, transHandler)
+}
 {{end}}`))
 )
