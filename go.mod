@@ -14,4 +14,4 @@ require (
 	google.golang.org/grpc v1.24.0
 )
 
-replace github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway => ./github.com/gowins/grpc-gateway/protoc-gen-grpc-gateway
+replace github.com/grpc-ecosystem/grpc-gateway => ../github.com/gowins/grpc-gateway
