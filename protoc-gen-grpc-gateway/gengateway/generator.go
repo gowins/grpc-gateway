@@ -6,6 +6,7 @@ import (
 	"go/format"
 	"path"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/golang/glog"
@@ -138,6 +139,15 @@ func (g *generator) generate(file *descriptor.File) (string, error) {
 			}
 			pkgSeen[pkg.Path] = true
 			imports = append(imports, pkg)
+		}
+	}
+	reg := regexp.MustCompile(`^(gitlab.weipaitang.com/micro-proto/).*\/`)
+	for _, v := range file.Dependency {
+		depend := reg.FindSubmatch([]byte(v))
+		if len(depend) > 0 {
+			//alias := v[len(depend[0]):][:len(v[len(depend[0]):])-6]
+			packagePath := string(depend[0])
+			imports = append(imports, descriptor.GoPackage{Path: packagePath[:len(packagePath)-1], Name: packagePath[:len(packagePath)-1]})
 		}
 	}
 	params := param{
