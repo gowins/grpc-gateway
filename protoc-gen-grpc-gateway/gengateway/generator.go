@@ -130,13 +130,7 @@ func (g *generator) generate(file *descriptor.File) (string, error) {
 	}
 	for _, svc := range file.Services {
 		for _, m := range svc.Methods {
-			//fmt.Println(*svc.Name,*m.InputType,*m.OutputType)
-			//return "",errors.New("ss")
 			imports = append(imports, g.addEnumPathParamImports(file, m, pkgSeen)...)
-			//if len(m.Bindings) == 0 ||
-			//	pkg == file.GoPkg || pkgSeen[pkg.Path] {
-			//	continue
-			//}
 
 			if len(m.Bindings) == 0 {
 				continue
@@ -155,15 +149,6 @@ func (g *generator) generate(file *descriptor.File) (string, error) {
 			}
 		}
 	}
-	//reg := regexp.MustCompile(`^(gitlab.weipaitang.com/micro-proto/).*\/`)
-	//for _, v := range file.Dependency {
-	//	depend := reg.FindSubmatch([]byte(v))
-	//	if len(depend) > 0 {
-	//		//alias := v[len(depend[0]):][:len(v[len(depend[0]):])-6]
-	//		packagePath := string(depend[0])
-	//		imports = append(imports, descriptor.GoPackage{Path: packagePath[:len(packagePath)-1], Name: packagePath[:len(packagePath)-1]})
-	//	}
-	//}
 	params := param{
 		File:               file,
 		Imports:            imports,
