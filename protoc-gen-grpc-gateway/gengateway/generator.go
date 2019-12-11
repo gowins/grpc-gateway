@@ -130,16 +130,40 @@ func (g *generator) generate(file *descriptor.File) (string, error) {
 	}
 	for _, svc := range file.Services {
 		for _, m := range svc.Methods {
+			//fmt.Println(*svc.Name,*m.InputType,*m.OutputType)
+			//return "",errors.New("ss")
 			imports = append(imports, g.addEnumPathParamImports(file, m, pkgSeen)...)
-			pkg := m.RequestType.File.GoPkg
-			if len(m.Bindings) == 0 ||
-				pkg == file.GoPkg || pkgSeen[pkg.Path] {
+			//if len(m.Bindings) == 0 ||
+			//	pkg == file.GoPkg || pkgSeen[pkg.Path] {
+			//	continue
+			//}
+
+			if len(m.Bindings) == 0 {
 				continue
 			}
-			pkgSeen[pkg.Path] = true
-			imports = append(imports, pkg)
+
+			pkg := m.RequestType.File.GoPkg
+			if pkg != file.GoPkg && !pkgSeen[pkg.Path] {
+				pkgSeen[pkg.Path] = true
+				imports = append(imports, pkg)
+			}
+
+			pkg1 := m.ResponseType.File.GoPkg
+			if pkg1 != file.GoPkg && !pkgSeen[pkg1.Path] {
+				pkgSeen[pkg1.Path] = true
+				imports = append(imports, pkg1)
+			}
 		}
 	}
+	//reg := regexp.MustCompile(`^(gitlab.weipaitang.com/micro-proto/).*\/`)
+	//for _, v := range file.Dependency {
+	//	depend := reg.FindSubmatch([]byte(v))
+	//	if len(depend) > 0 {
+	//		//alias := v[len(depend[0]):][:len(v[len(depend[0]):])-6]
+	//		packagePath := string(depend[0])
+	//		imports = append(imports, descriptor.GoPackage{Path: packagePath[:len(packagePath)-1], Name: packagePath[:len(packagePath)-1]})
+	//	}
+	//}
 	params := param{
 		File:               file,
 		Imports:            imports,

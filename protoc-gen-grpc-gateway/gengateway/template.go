@@ -735,8 +735,15 @@ var (
 
 	transMicroTemplate = template.Must(template.New("rewriteMicro").Parse(`
 {{range $svc := .Services}}
+
+// Server API for {{$svc.GetName}} service
+type {{$svc.GetName}}{{$.RegisterFuncSuffix}}Handler interface {
+	{{range $m := $svc.Methods}}
+	{{$m.GetName}}(context.Context, *{{$m.RequestType.GoType $m.Service.File.GoPkg.Path}}, *{{$m.ResponseType.GoType $m.Service.File.GoPkg.Path}}) error{{end}}
+}
+
 type handle{{$svc.GetName}} struct {
-	{{$svc.GetName}}Handler {{$svc.GetName}}Handler
+	{{$svc.GetName}}Handler {{$svc.GetName}}{{$.RegisterFuncSuffix}}Handler
 }
 
 {{range $m := $svc.Methods}}
@@ -750,7 +757,7 @@ func (h *handle{{$svc.GetName}}){{$m.GetName}}(ctx context.Context, in *{{$m.Req
 // Register{{$svc.GetName}}{{$.RegisterFuncSuffix}}ServerForMicro registers the http handlers for service {{$svc.GetName}} to "mux".
 // The handlers forward requests to the local go-micro endpoint over "handler".
 // The "handler" is a real handler that implement from go-micro interface.
-func Register{{$svc.GetName}}{{$.RegisterFuncSuffix}}ServerForMicro(ctx context.Context, mux *runtime.ServeMux, handler {{$svc.GetName}}Handler) error {
+func Register{{$svc.GetName}}{{$.RegisterFuncSuffix}}ServerForMicro(ctx context.Context, mux *runtime.ServeMux, handler {{$svc.GetName}}{{$.RegisterFuncSuffix}}Handler) error {
 	transHandler := &handle{{$svc.GetName}} {
 		{{$svc.GetName}}Handler: handler,
 	}
