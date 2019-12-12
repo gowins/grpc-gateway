@@ -748,8 +748,35 @@ type handle{{$svc.GetName}} struct {
 
 {{range $m := $svc.Methods}}
 func (h *handle{{$svc.GetName}}){{$m.GetName}}(ctx context.Context, in *{{$m.RequestType.GoType $m.Service.File.GoPkg.Path}}) (*{{$m.ResponseType.GoType $m.Service.File.GoPkg.Path}}, error) {
-    out := new({{$m.ResponseType.GoType $m.Service.File.GoPkg.Path}})
-	err := h.{{$svc.GetName}}Handler.{{$m.GetName}}(ctx, in, out)
+	out := new({{$m.ResponseType.GoType $m.Service.File.GoPkg.Path}})
+
+	ch := make(chan struct{})
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	
+	var (
+		err error
+		errMsg string = "{{$svc.GetName}}.{{$m.GetName}} "
+	)	
+
+	go func() {
+		defer func() {
+			if e := recover(); e != nil {
+				err = status.Errorf(http.StatusInternalServerError, "call panic: %v%v", errMsg, e)
+			} else if err != nil {
+				err = status.Error(http.StatusInternalServerError, errMsg+err.Error())
+			}
+			close(ch)
+		}()
+		err = h.{{$svc.GetName}}Handler.{{$m.GetName}}(ctx, in, out)
+	}()
+
+	select {
+	case <-ctx.Done():
+		err = status.Error(http.StatusInternalServerError, errMsg+context.DeadlineExceeded.Error())
+	case <-ch:
+	}
+
 	return out, err
 }
 {{end}}
