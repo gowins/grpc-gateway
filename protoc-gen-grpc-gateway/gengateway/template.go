@@ -754,17 +754,14 @@ func (h *handle{{$svc.GetName}}){{$m.GetName}}(ctx context.Context, in *{{$m.Req
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	
-	var (
-		err error
-		errMsg string = "{{$svc.GetName}}.{{$m.GetName}} "
-	)	
+	var err error
 
 	go func() {
 		defer func() {
 			if e := recover(); e != nil {
-				err = status.Errorf(http.StatusInternalServerError, "call panic: %v%v", errMsg, e)
+				err = status.Errorf(http.StatusInternalServerError, "call panic: {{$svc.GetName}}.{{$m.GetName}} %v", errMsg, e)
 			} else if err != nil {
-				err = status.Error(http.StatusInternalServerError, errMsg+err.Error())
+				err = status.Errorf(http.StatusInternalServerError, "{{$svc.GetName}}.{{$m.GetName}} %v", err.Error())
 			}
 			close(ch)
 		}()
@@ -773,7 +770,7 @@ func (h *handle{{$svc.GetName}}){{$m.GetName}}(ctx context.Context, in *{{$m.Req
 
 	select {
 	case <-ctx.Done():
-		err = status.Error(http.StatusInternalServerError, errMsg+context.DeadlineExceeded.Error())
+		err = status.Errorf(http.StatusInternalServerError, "{{$svc.GetName}}.{{$m.GetName}} %v", context.DeadlineExceeded.Error())
 	case <-ch:
 	}
 
