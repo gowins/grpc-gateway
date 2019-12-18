@@ -759,7 +759,7 @@ func (h *handle{{$svc.GetName}}){{$m.GetName}}(ctx context.Context, in *{{$m.Req
 	go func() {
 		defer func() {
 			if e := recover(); e != nil {
-				err = status.Errorf(http.StatusInternalServerError, "call panic: {{$svc.GetName}}.{{$m.GetName}} %v", errMsg, e)
+				err = status.Errorf(http.StatusInternalServerError, "call panic: {{$svc.GetName}}.{{$m.GetName}} %v", e)
 			} else if err != nil {
 				err = status.Errorf(http.StatusInternalServerError, "{{$svc.GetName}}.{{$m.GetName}} %v", err.Error())
 			}
