@@ -188,4 +188,3 @@ func (g *generator) addEnumPathParamImports(file *descriptor.File, m *descriptor
 	}
 	return imports
 }
-
